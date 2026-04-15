@@ -1,0 +1,227 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fear Release Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy-900: #1E293B;
+            --navy-800: #2D3A50;
+            --navy-700: #334155;
+            --navy-600: #475569;
+            --navy-400: #7B8FA3;
+            --navy-200: #CBD5E1;
+            --navy-50: #F1F5F9;
+            --gold-500: #E8A838;
+            --gold-400: #F0B84D;
+            --gold-200: #FBE4B3;
+            --white: #FFFFFF;
+            --font: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            --radius: 16px;
+            --radius-sm: 12px;
+            --shadow: 0 4px 24px rgba(30,41,59,0.08);
+            --shadow-lg: 0 8px 40px rgba(30,41,59,0.12);
+            --max-w: 440px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: var(--font); background: var(--navy-50); color: var(--navy-800);
+            min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
+            -webkit-font-smoothing: antialiased; line-height: 1.5;
+        }
+        #loader {
+            position:fixed; inset:0; background:var(--navy-50);
+            display:flex; align-items:center; justify-content:center; z-index:100;
+            transition: opacity 0.3s;
+        }
+        #loader.hide { opacity:0; pointer-events:none; }
+        .spinner { width:40px; height:40px; border:3px solid var(--navy-200); border-top-color:var(--gold-500); border-radius:50%; animation:spin .7s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .app { width:100%; max-width:var(--max-w); min-height:100dvh; padding:0 20px; display:flex; flex-direction:column; }
+        .screen { display:none; flex-direction:column; flex:1; animation:slideUp .35s ease; }
+        .screen.active { display:flex; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        .header { padding:16px 0; display:flex; align-items:center; justify-content:space-between; position:relative; }
+        .logo-wrap { display:flex; align-items:center; gap:8px; }
+        .logo-text { font-size:18px; font-weight:700; color:var(--navy-800); letter-spacing:-0.02em; }
+        .logo-text span { color:var(--navy-400); font-weight:500; }
+        .user-pill { display:flex; align-items:center; gap:6px; padding:4px 12px 4px 4px; background:var(--white); border:1px solid var(--navy-200); border-radius:40px; cursor:pointer; transition:box-shadow .2s; }
+        .user-pill:hover { box-shadow:var(--shadow); }
+        .avatar { width:28px; height:28px; border-radius:50%; background:var(--gold-200); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--navy-800); overflow:hidden; }
+        .avatar img { width:100%; height:100%; object-fit:cover; }
+        .user-pill-name { font-size:13px; font-weight:500; color:var(--navy-600); }
+        .user-menu { display:none; position:absolute; top:52px; right:0; background:var(--white); border:1px solid var(--navy-200); border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); z-index:50; min-width:160px; overflow:hidden; }
+        .user-menu.open { display:block; }
+        .user-menu-item { padding:10px 16px; font-size:14px; cursor:pointer; transition:background .15s; }
+        .user-menu-item:hover { background:var(--navy-50); }
+        .user-menu-item.red { color:#DC2626; }
+        .welcome-body { flex:1; display:flex; flex-direction:column; justify-content:center; padding:20px 0; }
+        .hero-icon { font-size:48px; margin-bottom:16px; }
+        .hero-title { font-size:28px; font-weight:700; line-height:1.2; color:var(--navy-900); margin-bottom:8px; letter-spacing:-0.03em; }
+        .hero-sub { font-size:15px; color:var(--navy-600); line-height:1.6; margin-bottom:28px; }
+        .hero-sub strong { font-weight:600; }
+        .chips { display:flex; flex-direction:column; gap:10px; margin-bottom:32px; }
+        .chip { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--white); border:1px solid var(--navy-200); border-radius:var(--radius-sm); transition:border-color .2s; }
+        .chip:hover { border-color:var(--gold-500); }
+        .chip-emoji { font-size:22px; min-width:32px; text-align:center; }
+        .chip-text { font-size:14px; color:var(--navy-700); }
+        .chip-text b { font-weight:600; color:var(--navy-900); }
+        .btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px 20px; border-radius:var(--radius-sm); font-family:var(--font); font-size:15px; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
+        .btn-google { background:var(--white); color:var(--navy-800); border:1.5px solid var(--navy-200); }
+        .btn-google:hover { border-color:var(--navy-400); box-shadow:var(--shadow); transform:translateY(-1px); }
+        .btn-google svg { width:18px; height:18px; }
+        .btn:disabled { opacity:.5; cursor:default; transform:none!important; }
+        .fine-print { text-align:center; font-size:12px; color:var(--navy-400); margin-top:12px; line-height:1.6; padding-bottom:24px; }
+        .dash-body { flex:1; display:flex; flex-direction:column; padding:12px 0 24px; }
+        .greeting-line { font-size:22px; font-weight:700; color:var(--navy-900); margin-bottom:4px; letter-spacing:-0.02em; }
+        .greeting-sub { font-size:14px; color:var(--navy-600); margin-bottom:24px; }
+        .cta-card { padding:24px; border-radius:var(--radius); background:linear-gradient(135deg,var(--navy-800),var(--navy-900)); color:var(--white); margin-bottom:16px; position:relative; overflow:hidden; }
+        .cta-card::after { content:''; position:absolute; top:-30px; right:-30px; width:120px; height:120px; border-radius:50%; background:var(--gold-500); opacity:.1; }
+        .cta-card h3 { font-size:18px; font-weight:700; margin-bottom:6px; }
+        .cta-card p { font-size:14px; opacity:.8; line-height:1.5; margin-bottom:16px; }
+        .cta-card .btn { background:var(--gold-500); color:var(--navy-900); font-weight:700; width:auto; display:inline-flex; }
+        .cta-card .btn:hover { background:var(--gold-400); }
+        .stats { display:flex; gap:10px; margin-bottom:20px; }
+        .stat-card { flex:1; padding:16px; text-align:center; background:var(--white); border:1px solid var(--navy-200); border-radius:var(--radius-sm); }
+        .stat-num { font-size:28px; font-weight:700; color:var(--navy-800); }
+        .stat-label { font-size:12px; color:var(--navy-400); margin-top:2px; }
+        .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--navy-900); color:var(--white); padding:12px 20px; border-radius:var(--radius-sm); font-size:14px; z-index:200; transition:transform .3s; max-width:calc(100% - 40px); }
+        .toast.show { transform:translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+    <div id="loader"><div class="spinner"></div></div>
+    <div id="toast" class="toast"></div>
+    <div class="app">
+        <!-- WELCOME -->
+        <div id="screen-welcome" class="screen">
+            <div class="header">
+                <div class="logo-wrap">
+                    <div style="font-size:28px">🎓</div>
+                    <div class="logo-text">Fear Release <span>Tool</span></div>
+                </div>
+            </div>
+            <div class="welcome-body">
+                <div class="hero-icon">🎓</div>
+                <h1 class="hero-title">Release exam stress, one tap at a time</h1>
+                <p class="hero-sub">A guided <strong>EFT tapping tool</strong> designed for students dealing with exam anxiety. Part of a research study at Babeș-Bolyai University.</p>
+                <div class="chips">
+                    <div class="chip"><span class="chip-emoji">⏱️</span><span class="chip-text"><b>~10 min per session</b> — do it anywhere, any device</span></div>
+                    <div class="chip"><span class="chip-emoji">🔬</span><span class="chip-text"><b>For research</b> — your anonymous data helps science</span></div>
+                    <div class="chip"><span class="chip-emoji">🔒</span><span class="chip-text"><b>Private & secure</b> — sign in once, syncs across devices</span></div>
+                </div>
+            </div>
+            <div style="padding-bottom:24px">
+                <button class="btn btn-google" id="btn-signin" onclick="signInWithGoogle()">
+                    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    Continue with Google
+                </button>
+                <p class="fine-print">By signing in you agree to participate in this study.<br>All data is anonymised and used for academic purposes only.</p>
+            </div>
+        </div>
+        <!-- DASHBOARD -->
+        <div id="screen-dashboard" class="screen">
+            <div class="header">
+                <div class="logo-wrap">
+                    <div style="font-size:28px">🎓</div>
+                    <div class="logo-text">Fear Release <span>Tool</span></div>
+                </div>
+                <div class="user-pill" onclick="toggleMenu()">
+                    <div class="avatar" id="avatar"></div>
+                    <span class="user-pill-name" id="uname"></span>
+                </div>
+                <div class="user-menu" id="umenu">
+                    <div class="user-menu-item red" onclick="signOut()">Sign out</div>
+                </div>
+            </div>
+            <div class="dash-body">
+                <h2 class="greeting-line" id="greet"></h2>
+                <p class="greeting-sub" id="greet-sub"></p>
+                <div class="cta-card">
+                    <h3>Ready for a session? 💪</h3>
+                    <p>Find a quiet spot. Each session takes ~10 min. The tool guides you through the whole process.</p>
+                    <button class="btn" onclick="showToast('Coming in Milestone 3!')">Start session →</button>
+                </div>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-num" id="s-sessions">0</div>
+                        <div class="stat-label">Sessions done</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num" id="s-days">—</div>
+                        <div class="stat-label">Days in study</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey:"AIzaSyDUw2erxV7lflhPNxyX42TFeVNenYwr-tk",
+            authDomain:"fear-release-tool.firebaseapp.com",
+            projectId:"fear-release-tool",
+            storageBucket:"fear-release-tool.firebasestorage.app",
+            messagingSenderId:"166080752159",
+            appId:"1:166080752159:web:99e3a43160c64f9f3b032a"
+        });
+        const auth=firebase.auth(), db=firebase.firestore();
+
+        auth.onAuthStateChanged(async u=>{
+            hideLoader();
+            if(u){show('screen-dashboard');await setupDash(u)}
+            else show('screen-welcome')
+        });
+
+        async function signInWithGoogle(){
+            const b=document.getElementById('btn-signin');
+            b.disabled=true; b.textContent='Connecting...';
+            try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}
+            catch(e){
+                if(e.code==='auth/popup-blocked') showToast('Allow pop-ups for this site');
+                else if(e.code!=='auth/popup-closed-by-user') showToast('Sign-in failed — try again');
+                b.disabled=false;
+                b.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Continue with Google';
+            }
+        }
+
+        async function signOut(){await auth.signOut();hideMenu()}
+
+        async function setupDash(u){
+            const f=u.displayName?u.displayName.split(' ')[0]:'there';
+            document.getElementById('uname').textContent=f;
+            const av=document.getElementById('avatar');
+            if(u.photoURL) av.innerHTML='<img src="'+u.photoURL+'" referrerpolicy="no-referrer">';
+            else av.textContent=f.charAt(0).toUpperCase();
+            const h=new Date().getHours();
+            document.getElementById('greet').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+f+' 👋';
+            const ref=db.collection('users').doc(u.uid), doc=await ref.get();
+            if(!doc.exists){
+                await ref.set({email:u.email,displayName:u.displayName,createdAt:firebase.firestore.FieldValue.serverTimestamp(),sessionsCompleted:0,studyPhase:'pre-survey',lastSessionAt:null});
+                document.getElementById('greet-sub').textContent="Welcome! Let's get you started.";
+                document.getElementById('s-sessions').textContent='0';
+                document.getElementById('s-days').textContent='1';
+            }else{
+                const d=doc.data(), sc=d.sessionsCompleted||0;
+                document.getElementById('s-sessions').textContent=sc;
+                if(d.createdAt) document.getElementById('s-days').textContent=Math.max(1,Math.ceil((Date.now()-d.createdAt.toDate().getTime())/864e5));
+                document.getElementById('greet-sub').textContent=sc===0?"Ready for your first session?":sc+' session'+(sc===1?'':'s')+' done — keep going!';
+            }
+        }
+
+        function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+        function hideLoader(){const l=document.getElementById('loader');l.classList.add('hide');setTimeout(()=>l.remove(),300)}
+        function showToast(m){const t=document.getElementById('toast');t.textContent=m;setTimeout(()=>t.classList.add('show'),10);setTimeout(()=>t.classList.remove('show'),3000)}
+        function toggleMenu(){document.getElementById('umenu').classList.toggle('open')}
+        function hideMenu(){document.getElementById('umenu').classList.remove('open')}
+        document.addEventListener('click',e=>{if(!e.target.closest('.user-pill')&&!e.target.closest('.user-menu'))hideMenu()});
+    </script>
+</body>
+</html>
